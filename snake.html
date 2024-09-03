@@ -1,0 +1,249 @@
+<!DOCTYPE html> 
+<html> 
+    <!-- this will be the name that the website displays -->
+    <head>
+        <title> Thee Serpent Game </title> 
+    </head>
+
+    <!-- "id" used here because styling will only be used once. If styling wants to be used multiple times used "class"-->
+    <!-- additionally, "id" can be used for footers/"href" to make text from website lead to other parts of the website -->
+    <body class = "salutations">  
+        The Serpent Game
+    </body>
+
+    <!-- sets an image of choice as the background of the website -->
+    <style>
+        body {
+            background-image: linear-gradient(#00000086, #00000086), 
+            url(https://images.squarespace-cdn.com/content/v1/5d4b249616f93e000149aebd/1582754515564-BXPKINYTYDZEGFBN4ATE/alex-mannion-screenshot1.jpg);
+        }
+    </style>
+
+    <!-- decorates the greeting message that we display on our site -->
+    <style>
+        .salutations {
+            font-family: Papyrus, fantasy;
+            font-size: 450%;
+            color: #4e0b85;
+            font-weight: bolder;
+            text-align: center;
+        }
+    </style>
+
+    <!-- div to separate words and canvas -->
+    <div> </div>
+
+    <!-- style block to decorate the score tab -->
+    <style>
+        #score {
+            font-size: x-large;
+            color: 'black';
+        }
+    </style>
+    
+    <body>
+        <div id = "score" > Score: 0 </div>
+        <!-- this is responsible for the size of our canvas -->
+        <canvas id = "canvas" width = "540" height = "540"> </canvas>
+
+        <script>
+            /* ----------------------- Important Notes -----------------------
+
+                -- const in a way is similar a final variable in java
+                -- 
+            */
+
+            // this will get the canvas element we declared earlier
+            var canvas = document.getElementById("canvas");
+
+            // this will create a 2-dimensional drawing
+            var context = canvas.getContext("2d");
+
+            function theCanvas() {
+                // this will choose the color that goes on the inside of the canvas
+                context.fillStyle = '#52527a';
+                // this will color the inside of the canvas
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                // this will choose the color of the canvas' border
+                context.strokeStyle = 'black';
+                // this will color the border of the canvas
+                context.strokeRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            // this will give the snake its block like properties
+            let serpent = [{x : 270, y: 270}, {x : 255, y : 270}, 
+            {x : 240, y : 270}, {x : 225, y : 270}, {x : 210, y : 270}];
+
+            // horizontal velocity, vertical velocity
+            let dx = 15; dy = 0;
+
+            // the players current score
+            let score = 0;
+
+            let directionChange = false;
+
+            // this function will be responsible for drawing parts of the snake
+            function serpentDrawing(theSerpent) {
+                context.fillStyle = 'purple';
+                context.fillRect(theSerpent.x, theSerpent.y, 15, 15);
+
+                context.strokeStyle = 'lightpurple';
+                context.strokeRect(theSerpent.x, theSerpent.y, 15, 15);
+            }
+
+            // this function loops through the serpent array and uses the
+            // serpentDrawing function to put together the snake figure
+            function drawSerpent() {
+                serpent.forEach(serpentDrawing);
+            }
+
+            // this function is responsible for moving our snake, the only 
+            // aspects of our snake that are edited are its head coordinates
+            function advanceSerpent() {
+                const head = {x : serpent[0].x + dx, y : serpent[0].y + dy};
+                serpent.unshift(head);
+                const eatingFood = serpent[0].x === position_x && serpent[0].y === position_y;
+
+                if (eatingFood) {
+                    score += 10;
+                    document.getElementById('score').innerHTML = 'Score: ' + score;
+                    theFood();
+
+                } else {
+                    serpent.pop();
+                }
+                
+            }
+
+            // this function gives our serpent its moving abilities, it will
+            // correspond to the keys the user presses
+            function serpentMovement(action) {
+                const KEY_LEFT = 37;
+                const KEY_UP = 38;
+                const KEY_RIGHT = 39;
+                const KEY_DOWN = 40;
+
+                if (directionChange) return;
+                directionChange = true;
+
+                const KEY_PRESSED = action.keyCode;            
+                const move_up = dy === -15;
+                const move_down = dy === 15;
+                const move_left = dx === -15;
+                const move_right = dx === 15;
+
+                if (KEY_PRESSED === KEY_LEFT && !move_right) {
+                    dx = -15;
+                    dy = 0;
+                }
+
+                if (KEY_PRESSED === KEY_RIGHT && !move_left) {
+                    dx = 15;
+                    dy = 0;
+                } 
+
+                if (KEY_PRESSED === KEY_UP && !move_down) {
+                    dx = 0;
+                    dy = -15;
+                }
+
+                if (KEY_PRESSED === KEY_DOWN && !move_up) {
+                    dx = 0;
+                    dy = 15;
+                }
+
+            }
+
+            // this function will simply produce a random number, we need this
+            // so that we can determine the coordinates of the food
+            function randomNum(min, max) {
+                return Math.round((Math.random() * (max - min) + min) / 15 ) * 15;
+            }
+
+            // this function will create our serpent's food, we will use the randomNum 
+            // function to get an x and y coordinate at random. when the serpent is at
+            // the foods location, another food will be generated.
+            function theFood() {
+                position_x = randomNum(0, canvas.width - 15);
+                position_y = randomNum(0, canvas.height - 15);
+
+                serpent.forEach(function eatFood(location) {
+                    const onFood = location.x == position_x && location.y == position_y;
+
+                    if (onFood) 
+                        theFood();
+
+                });
+
+            }
+
+            // this function will simply draw the serpent's nutrients
+            function drawFood() {
+                context.fillStyle = 'darkred';
+                context.fillRect(position_x, position_y, 15, 15);
+
+                context.strokeStyle = 'red';
+                context.strokeRect(position_x, position_y, 15, 15);
+            }
+
+            // this function will help identift when to end the game. the game will
+            // end when the serpent touches itself or a border. the way this function 
+            // works is it will check if the serpent's head touches any part of its body.
+            // that is why the for loop is used, it begins at 4 because the first 4 blocks
+            // will never touch. 
+            // the way the function makes sure that the serpent is not touching the walls
+            // is by making sure the serpent's head's coordinates are always less than 
+            // the x and y axis of the canvas.
+            function endGame() {
+                for (let i = 4; i < serpent.length; i++) {
+                    const selfEaten = serpent[i].x === serpent[0].x && serpent[i].y === serpent[0].y;
+
+                    if (selfEaten) 
+                        return true;
+
+                }
+
+                const hitLeftWall = serpent[0].x < 0;
+                const hitTopWall = serpent[0].y < 0;
+
+                const hitRightWall = serpent[0].x > canvas.width - 15;
+                const hitBottomWall = serpent[0].y > canvas.height - 15;
+
+                return hitLeftWall || hitBottomWall || hitRightWall || hitTopWall;
+
+            }
+
+            // our main function is responsible for calling all of the necessary
+            // methods to keep our game running. nesting the main() method into itself 
+            // with a slight delay will assure the serpent smoothly travels across the map.
+            function main() {
+                if (endGame()) return;
+
+                setTimeout(function onTick() {
+                    directionChange = false;
+                    theCanvas();
+                    drawFood();
+                    advanceSerpent();
+                    drawSerpent();
+                    main();
+                    
+                }, 100);
+            }
+
+            window.addEventListener("keydown", function (disableMovement) {
+                if (["Space", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].indexOf(disableMovement.code) > -1) {
+                    disableMovement.preventDefault();
+                }
+
+            }, false);
+
+            main();
+            theFood();
+            document.addEventListener("keydown", serpentMovement);
+
+        </script>
+
+    </body>
+
+
+</html>
